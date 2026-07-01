@@ -24,6 +24,8 @@ app.use("/interview",interviewRoutes);
 app.use("/answer", answerRoutes);
 app.use("/contact",contactRoutes);
 
-app.listen(8000,()=>{
-    console.log("listening on 8000");
-})
+const PORT = process.env.PORT || 8000;
+app.listen(PORT,()=>{
+    console.log(`server is listening on ${PORT}`);
+
+});
