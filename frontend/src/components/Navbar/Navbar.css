@@ -1,0 +1,82 @@
+.navbar{
+
+width:90%;
+margin:auto;
+padding:25px 0;
+
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.logo{
+font-size:30px;
+font-weight:700;
+}
+
+.nav-links{
+display:flex;
+gap:35px;
+}
+
+.nav-links a{
+text-decoration:none;
+color:#222;
+font-weight:500;
+}
+
+.buttons{
+display:flex;
+gap:15px;
+}
+
+.login{
+padding:10px 22px;
+border:none;
+color:white;
+background:#7c3aed;
+border-radius:30px;
+cursor:pointer;
+}
+
+.signup{
+padding:10px 22px;
+border:none;
+background:#7c3aed;
+color:white;
+border-radius:30px;
+cursor:pointer;
+}
+.login:hover {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.35);
+}
+.signup:hover {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.35);
+}
+
+
+.logout {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 30px;
+  background: linear-gradient(135deg, #7c3aed, #9333ea);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logout:hover {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.35);
+}
+
+.logout:active {
+  transform: scale(0.96);
+}

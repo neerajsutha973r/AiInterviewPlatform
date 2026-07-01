@@ -1,0 +1,18 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap");
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:"Outfit",sans-serif;
+}
+
+body{
+
+background:
+radial-gradient(circle at top left,#c084fc55,transparent 40%),
+radial-gradient(circle at bottom right,#8b5cf655,transparent 40%),
+linear-gradient(135deg,#ffffff,#f3efff);
+
+min-height:100vh;
+}

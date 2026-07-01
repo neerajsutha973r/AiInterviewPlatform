@@ -1,0 +1,67 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 1000;
+}
+
+.modal {
+  width: 420px;
+  background: white;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 15px 40px rgba(0,0,0,.2);
+}
+
+.modal h2 {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.modal form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.modal input,
+.modal select {
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  outline: none;
+  font-size: 15px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+.cancel {
+  background: #ddd;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.create {
+  background: #7c3aed;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.error {
+  color: red;
+  text-align: center;
+}

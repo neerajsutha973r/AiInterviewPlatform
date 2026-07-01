@@ -1,0 +1,107 @@
+.result-container {
+    max-width: 900px;
+    margin: 50px auto;
+    padding: 20px;
+}
+
+.result-container h1 {
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 40px;
+    color: #222;
+}
+
+.result-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 25px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    transition: 0.3s;
+    border-left: 6px solid #6C63FF;
+}
+
+.result-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+.result-card h2 {
+    color: #6C63FF;
+    margin-bottom: 20px;
+}
+
+.result-card strong {
+    color: #333;
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+.result-card p {
+    margin: 0;
+    color: #555;
+    line-height: 1.7;
+    word-wrap: break-word;
+}
+
+.result-card p:last-child {
+    margin-bottom: 0;
+}
+.marks strong{
+color: #333;
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+.marks p{
+    margin: 0;
+    color: #555;
+    line-height: 1.7;
+    word-wrap: break-word;
+}
+.score {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 8px 18px;
+    background: #6C63FF;
+    color: white;
+    border-radius: 25px;
+    font-weight: bold;
+}
+
+.loading {
+    text-align: center;
+    margin-top: 120px;
+    font-size: 32px;
+    color: #6C63FF;
+}
+
+@media (max-width: 768px) {
+
+    .result-container {
+        width: 95%;
+        padding: 10px;
+    }
+
+    .result-container h1 {
+        font-size: 30px;
+    }
+
+    .result-card {
+        padding: 20px;
+    }
+
+}
+
+.total-marks{
+    text-align: center;
+    margin-top: 30px;
+    font-size: 24px;
+    color: white;
+    background-color: rgba(55, 45, 255, 0.95);
+    border-radius: 10px;
+    border: 2px solid #6C63FF;
+    padding-top:30px
+}

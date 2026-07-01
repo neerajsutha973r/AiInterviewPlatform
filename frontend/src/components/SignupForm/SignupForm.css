@@ -1,0 +1,71 @@
+.signup-page{
+    min-height:85vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.signup-card{
+    width:450px;
+    padding:40px;
+    border-radius:20px;
+    background:rgba(255,255,255,.2);
+    backdrop-filter:blur(15px);
+    border:1px solid rgba(255,255,255,.3);
+    box-shadow:0 15px 40px rgba(0,0,0,.1);
+}
+
+.signup-card h1{
+    text-align:center;
+    margin-bottom:10px;
+}
+
+.signup-card p{
+    text-align:center;
+    color:#666;
+    margin-bottom:25px;
+}
+
+.signup-card form{
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+}
+
+.signup-card input{
+    padding:14px;
+    border:1px soild black;
+    border-radius:10px;
+    outline:none;
+    font-size:16px;
+}
+
+.signup-card button{
+    padding:14px;
+    border:none;
+    border-radius:10px;
+    background:#7c3aed;
+    color:white;
+    font-size:16px;
+    cursor:pointer;
+}
+
+.signup-card button:disabled{
+    opacity:.6;
+    cursor:not-allowed;
+}
+
+.error{
+    color:red;
+    text-align:center;
+}
+
+.login-link{
+    margin-top:20px;
+}
+
+.login-link a{
+    color:#7c3aed;
+    text-decoration:none;
+    font-weight:600;
+}
