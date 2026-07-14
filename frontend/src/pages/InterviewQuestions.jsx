@@ -153,7 +153,11 @@ function InterviewQuestions() {
         );
 
     }
-
+    if(evaluating){
+        return (
+            <><h2>Please wait few seconds AI is evaluating your answers... </h2></>
+        )
+    }
     if (!isAuthenticated) {
 
         return (
@@ -186,7 +190,7 @@ function InterviewQuestions() {
 
                     <textarea
                         rows="8"
-                        placeholder="Write or speak your answer..."
+                        placeholder="speak your answer..."
                         value={answer}
                         onChange={(e) => setAnswer(e.target.value)}
                     />

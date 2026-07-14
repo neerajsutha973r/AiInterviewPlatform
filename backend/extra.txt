@@ -1,0 +1,2 @@
+backend=https://ai-interview-platform-mocha-six.vercel.app
+frontend=https://aiinterviewplatform-4vfq.onrender.com
