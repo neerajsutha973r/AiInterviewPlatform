@@ -41,7 +41,7 @@ Do not include markdown.
 `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash-native-audio-dialog",
+    model: "gemini-3.1-flash-lite",
     contents: prompt,
   });
 
@@ -93,7 +93,7 @@ Do not include explanations outside JSON.
 `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash-native-audio-dialog",
+    model: "gemini-3.1-flash-lite",
     contents: prompt,
   });
 
