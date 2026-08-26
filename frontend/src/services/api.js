@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://aiinterviewplatform-4vfq.onrender.com",
+  baseURL: "http://localhost:8000",
+  //https://aiinterviewplatform-4vfq.onrender.com
 });
 
 api.interceptors.request.use((config) => {

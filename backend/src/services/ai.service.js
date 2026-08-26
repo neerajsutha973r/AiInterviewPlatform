@@ -8,7 +8,11 @@ const generateQuestions = async (role, difficulty) => {
   const prompt = `
 You are an expert technical interviewer.
 
-Generate exactly 10 interview questions.
+You MUST generate EXACTLY 10 interview questions.
+NOT 2.
+NOT 3.
+NOT 4.
+EXACTLY 10.
 
 Role: ${role}
 Difficulty: ${difficulty}
@@ -21,7 +25,6 @@ Requirements:
 - Questions should sound like a real interviewer speaking.
 - Avoid yes/no questions.
 - Include practical scenarios whenever possible.
-- Each time, generate different questions and avoid repeating previous questions.
 
 Return ONLY a valid JSON array.
 
@@ -38,12 +41,12 @@ Do not include markdown.
 `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-3.6-flash",
+    model: "gemini-3.1-flash-lite",
     contents: prompt,
   });
 
   const content = response.text;
-
+ 
   try {
     return JSON.parse(content);
   } catch {
@@ -90,7 +93,7 @@ Do not include explanations outside JSON.
 `;
 
   const response = await ai.models.generateContent({
-    model: "gemini-3.6-flash",
+    model: "gemini-3.1-flash-lite",
     contents: prompt,
   });
 

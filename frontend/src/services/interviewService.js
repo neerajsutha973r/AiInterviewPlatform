@@ -51,7 +51,7 @@ evaluateInterview: async (interviewId) => {
   const response = await api.post(
     `/answer/interview/${interviewId}/evaluate`
   );
-
+  console.log(response.data);
   return response.data;
 },
 
