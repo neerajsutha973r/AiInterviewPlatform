@@ -1,260 +1,506 @@
 # 🤖 AI Interview Platform
 
-An AI-powered interview preparation platform designed to help developers practice technical interviews through dynamically generated questions, answer evaluation, and personalized interview sessions.
+An AI-powered technical interview platform that simulates real-world technical interviews using Google Gemini, speech recognition, text-to-speech, and semantic question similarity search with PostgreSQL and pgvector.
 
-The platform is designed to generate interview questions based on **topic, difficulty, and interview context**, while maintaining question history to reduce repetitive questions across sessions.
-
----
-
-## ✨ Features
-
-### 🎯 AI-Powered Interview Questions
-
-* Generate technical interview questions using an LLM.
-* Select specific topics and difficulty levels.
-* Generate questions dynamically instead of relying only on a static question bank.
-* Support for topics such as **Data Structures & Algorithms (DSA)** and other technical subjects.
-
-### 🧠 Question History & Deduplication
-
-The platform keeps track of previously generated questions so that the AI can avoid repeatedly asking the same or highly similar questions.
-
-A future **RAG-based question retrieval system** will be used to retrieve previously asked questions and provide them as context to the LLM before generating a new question.
-
-### 📊 Answer Evaluation
-
-* Evaluate submitted answers using AI.
-* Provide feedback on the user's response.
-* Identify strengths and areas for improvement.
-* Generate interview-style feedback rather than only checking whether an answer is correct.
-
-### 📈 Interview Practice
-
-* Practice questions based on selected difficulty.
-* Track interview sessions.
-* Maintain question and answer history.
-* Improve preparation through repeated practice with different questions.
+The platform allows users to create interviews based on a specific **role** and **difficulty**, receive AI-generated technical questions, answer them using voice or text, and receive AI-powered evaluation and feedback.
 
 ---
 
-## 🏗️ Planned RAG Architecture
+## 🚀 Features
 
-One of the major goals of this project is to solve a common problem with LLM-based question generation:
+### 🎯 Personalized Interviews
 
-> **The LLM can generate the same or very similar question when given the same topic and difficulty.**
+Users can create an interview by selecting:
 
-To solve this, the platform will maintain a vector database containing previously generated questions.
+- Interview title
+- Technical role
+- Difficulty level
 
-### Question Generation Flow
+The system generates questions specifically for the selected role and difficulty.
+
+### 🤖 AI Question Generation
+
+Google Gemini generates technical interview questions dynamically.
+
+Each interview contains:
+
+- Exactly 10 questions
+- Open-ended questions
+- Practical scenarios
+- Role-specific questions
+- Difficulty-appropriate questions
+- Expected/correct answers for evaluation
+
+### 🧠 Semantic Question Similarity
+
+The platform uses **Gemini Embedding 001** to convert questions into vector embeddings.
+
+These embeddings are stored in **Neon PostgreSQL using pgvector**.
+
+Before accepting a new question, the system performs a semantic similarity search against previously stored questions.
+
+This helps prevent questions that are:
+
+- Identical
+- Substantially similar
+- Simple rewordings
+- Similar scenarios with different wording
+
+A similarity threshold of **0.85** is currently used.
+
+### 🎤 Speech Recognition
+
+Candidates can answer interview questions using their microphone.
+
+Speech is converted into text using the browser's Speech Recognition API and displayed in the answer box.
+
+### 🔊 Text-to-Speech
+
+The AI interviewer reads each question aloud using browser text-to-speech.
+
+After the question is spoken, the system automatically starts listening for the candidate's answer.
+
+### 📊 AI Answer Evaluation
+
+Candidate answers are evaluated by Google Gemini based on:
+
+- Accuracy
+- Completeness
+- Technical correctness
+
+The system returns:
+
+- Score from 0–10
+- Constructive feedback
+
+### 🔐 Authentication
+
+User authentication is implemented using JWT-based authentication.
+
+Authenticated users can manage their own interviews.
+
+### 📈 Interview Results
+
+After completing an interview, the platform evaluates the candidate's answers and provides an interview result with scores and feedback.
+
+---
+
+# 🛠️ Tech Stack
+
+## Frontend
+
+- React
+- React Router
+- Axios
+- JavaScript
+- Web Speech API
+- Speech Synthesis API
+- CSS
+
+## Backend
+
+- Node.js
+- Express.js
+- REST APIs
+- JWT Authentication
+
+## AI
+
+- Google Gemini
+- Gemini 3.1 Flash-Lite
+- Gemini Embedding 001
+
+## Database
+
+- PostgreSQL
+- Neon PostgreSQL
+- pgvector
+
+---
+
+# 🏗️ System Architecture
+
+                         ┌──────────────────────┐
+                         │    React Frontend    │
+                         └──────────┬───────────┘
+                                    │
+                                    │ REST API
+                                    ▼
+                         ┌──────────────────────┐
+                         │   Node.js + Express  │
+                         └──────────┬───────────┘
+                                    │
+                   ┌────────────────┼─────────────────┐
+                   │                │                 │
+                   ▼                ▼                 ▼
+             Interview          Answer            AI Service
+             Service            Service               │
+                   │                │                  │
+                   │                │                  ▼
+                   │                │           Google Gemini
+                   │                │                  │
+                   │                │          ┌───────┴────────┐
+                   │                │          │                │
+                   │                │          ▼                ▼
+                   │                │     Text Generation   Embeddings
+                   │                │                           │
+                   │                │                           ▼
+                   │                │                    Gemini Embedding
+                   │                │                           │
+                   └────────────────┴───────────────────────────┤
+                                                                ▼
+                                                     PostgreSQL + pgvector
+                                                                │
+                                                                ▼
+                                                               Neon
+
+
+---
+
+# 🧠 Question Generation & Similarity System
+
+The question generation system follows multiple steps.
+
+## Step 1 — User Creates an Interview
+
+The user selects:
 
 ```text
-User
- │
- ▼
-Select Topic + Difficulty
- │
- ▼
-Retrieve Previous Questions
- │
- ▼
-Vector Database
- │
- ▼
-Similar Questions
- │
- ▼
-LLM
- │
- │  "Generate a NEW question
- │   different from these questions"
- ▼
-New Interview Question
- │
- ▼
-Store Question in Vector DB
+Role
+Difficulty
+Interview Title
 ```
 
-This approach combines **Retrieval-Augmented Generation (RAG)** with question generation to improve question diversity and reduce repetition.
+The backend stores the interview in PostgreSQL.
 
 ---
 
-## 🧩 RAG Pipeline
+## Step 2 — Gemini Generates Questions
 
-The planned RAG pipeline consists of:
+When the user starts the interview, the backend sends the selected role and difficulty to Gemini.
+
+Example:
 
 ```text
-Generated Question
-       │
-       ▼
-   Text Chunking
-       │
-       ▼
-   Embeddings
-       │
-       ▼
-  Vector Database
-       │
-       ▼
-Similarity Search
-       │
-       ▼
-Previously Asked Questions
-       │
-       ▼
-      LLM
-       │
-       ▼
-New Question
-```
-
-The retrieved questions will be provided to the LLM as negative context so that it can generate a sufficiently different question while maintaining the requested topic and difficulty.
-
----
-
-## 🛠️ Technology Stack
-
-### Frontend
-
-* React.js
-* JavaScript
-* HTML
-* CSS
-
-### Backend
-
-* Python
-* REST API
-
-### AI / GenAI
-
-* Large Language Models (LLMs)
-* Prompt Engineering
-* Retrieval-Augmented Generation (RAG)
-* Embeddings
-
-### Vector Database
-
-* ChromaDB
-
-### Planned AI Components
-
-* Question generation
-* Semantic similarity search
-* Question deduplication
-* Answer evaluation
-* Personalized feedback
-
----
-
-## 📂 High-Level Architecture
-
-```text
-                  ┌──────────────────┐
-                  │      User        │
-                  └────────┬─────────┘
-                           │
-                           ▼
-                  ┌──────────────────┐
-                  │    Frontend      │
-                  │     React        │
-                  └────────┬─────────┘
-                           │
-                           ▼
-                  ┌──────────────────┐
-                  │     Backend      │
-                  │     Python       │
-                  └────────┬─────────┘
-                           │
-                 ┌─────────┴─────────┐
-                 ▼                   ▼
-        ┌─────────────────┐  ┌─────────────────┐
-        │  Vector Search  │  │      LLM        │
-        │    ChromaDB     │  │ Question/Answer │
-        └────────┬────────┘  └────────┬────────┘
-                 │                    │
-                 └─────────┬──────────┘
-                           ▼
-                  ┌──────────────────┐
-                  │ Interview Result │
-                  └──────────────────┘
-```
-
----
-
-## 🚀 Project Goals
-
-The main goals of the project are:
-
-* Generate diverse technical interview questions.
-* Reduce duplicate and highly similar questions.
-* Understand how RAG can improve LLM applications.
-* Build a practical semantic-search pipeline.
-* Provide AI-powered answer evaluation.
-* Track interview performance over time.
-* Create a realistic AI interview experience.
-
----
-
-## 🔮 Future Improvements
-
-* [ ] RAG-based question history
-* [ ] Semantic duplicate detection
-* [ ] Difficulty-aware question retrieval
-* [ ] Adaptive difficulty based on performance
-* [ ] Voice-based interviews
-* [ ] Resume-based interview questions
-* [ ] Job-description-based questions
-* [ ] Interview performance dashboard
-* [ ] Personalized learning recommendations
-* [ ] Follow-up questions based on previous answers
-* [ ] Question quality evaluation
-* [ ] Multi-agent interview architecture
-
----
-
-## 🧪 Example
-
-Suppose the user selects:
-
-```text
-Topic: Trie
+Role: Backend Developer
 Difficulty: Medium
 ```
 
-The system first retrieves previously generated Trie questions:
+Gemini generates exactly 10 questions.
 
-```text
-Question 1 → Implement Trie
-Question 2 → Search a word in Trie
-Question 3 → Word Dictionary using Trie
-Question 4 → Autocomplete using Trie
+Each question contains:
+
+```json
+{
+  "question": "...",
+  "correct_answer": "..."
+}
 ```
 
-The LLM then receives these questions as context and is instructed to generate a **new medium-difficulty Trie problem that is meaningfully different from the retrieved questions**.
+---
 
-This prevents the system from simply generating another variation of an already-used question.
+## Step 3 — Generate Embeddings
+
+Each generated question is sent to:
+
+```text
+Gemini Embedding 001
+```
+
+The model converts the question into a numerical vector.
+
+Currently, the application uses:
+
+```text
+768 dimensions
+```
+
+Conceptually:
+
+```text
+Question
+   ↓
+Gemini Embedding 001
+   ↓
+[0.012, -0.034, 0.087, ...]
+   ↓
+768-dimensional vector
+```
 
 ---
 
-## 📚 Learning Focus
+## Step 4 — Search Existing Questions
 
-This project is also being developed as a practical learning project for understanding:
+The generated question's embedding is compared with embeddings already stored in PostgreSQL.
 
-* Generative AI
-* LLM application development
-* Prompt engineering
-* Embeddings
-* Vector databases
-* Semantic search
-* RAG architecture
-* AI evaluation
-* Backend API development
-* Full-stack AI applications
+The search is restricted by:
+
+```text
+Role
++
+Difficulty
+```
+
+This means a question generated for:
+
+```text
+Backend Developer + Medium
+```
+
+is compared against relevant questions from the same role and difficulty.
 
 ---
 
-## 👨‍💻 Author
+## Step 5 — Calculate Similarity
+
+pgvector calculates vector distance using:
+
+```sql
+q.embedding <=> $1::vector
+```
+
+The application converts the distance into a similarity score:
+
+```sql
+1 - (q.embedding <=> $1::vector)
+```
+
+The closest question is returned first.
+
+---
+
+## Step 6 — Apply Similarity Threshold
+
+The current threshold is:
+
+```text
+0.85
+```
+
+The logic is:
+
+```text
+Similarity >= 0.85
+        ↓
+Similar question
+        ↓
+Reject
+
+Similarity < 0.85
+        ↓
+Different question
+        ↓
+Accept
+```
+
+This allows the system to detect semantic similarity rather than only checking whether the text is exactly the same.
+
+---
+
+# 🔍 Why Use pgvector?
+
+Traditional SQL text matching may fail when two questions have different wording but similar meanings.
+
+For example:
+
+```text
+Question A:
+"How does caching improve backend performance?"
+
+Question B:
+"Explain how caching can reduce response time in a backend system."
+```
+
+The wording is different, but the underlying concept is very similar.
+
+Vector embeddings represent the **semantic meaning** of the questions.
+
+pgvector allows PostgreSQL to efficiently compare these vectors.
+
+Therefore:
+
+```text
+Text
+ ↓
+Embedding
+ ↓
+Vector
+ ↓
+pgvector
+ ↓
+Similarity Search
+```
+
+---
+
+# 🗄️ Database Design
+
+The project uses **Neon PostgreSQL** as the primary database.
+
+The `questions` table contains question information and its embedding.
+
+```text
+questions
+├── id
+├── interview_id
+├── question
+├── correct_answer
+├── question_order
+├── created_at
+└── embedding
+```
+
+The `embedding` column stores the vector generated by Gemini Embedding 001.
+
+The `questions` table is connected to the `interviews` table using:
+
+
+# 🎤 Voice Interview Flow
+
+The interview experience supports voice interaction.
+
+```text
+AI Question
+     ↓
+Text-to-Speech
+     ↓
+Candidate listens
+     ↓
+Speech Recognition starts
+     ↓
+Candidate speaks
+     ↓
+Speech converted to text
+     ↓
+Answer submitted
+     ↓
+Next question
+```
+
+This creates a more natural interview experience compared with a traditional form-based application.
+
+---
+
+
+Create a `.env` file inside the backend directory.
+
+```env
+DATABASE_URL=your_neon_database_url
+GEMINI_API_KEY=your_gemini_api_key
+JWT_SECRET=your_jwt_secret
+```
+
+Never commit your `.env` file to GitHub.
+
+Add the following to `.gitignore`:
+
+```gitignore
+.env
+node_modules/
+```
+
+---
+
+# ▶️ Installation
+
+## 1. Clone the Repository
+
+```bash
+git clone https://github.com/your-username/AIInterviewPlatform.git
+
+cd AIInterviewPlatform
+```
+
+---
+
+## 2. Install Backend Dependencies
+
+```bash
+cd backend
+
+npm install
+```
+
+Start the backend:
+
+```bash
+npm run dev
+```
+
+---
+
+## 3. Install Frontend Dependencies
+
+Open another terminal:
+
+```bash
+cd frontend
+
+npm install
+```
+
+Start the frontend:
+
+```bash
+npm run dev
+```
+
+
+# 🚧 Current Limitations
+
+The current implementation has some areas that can be improved.
+
+### Question Regeneration
+
+If a generated question is rejected because it is too similar to an existing question, the system does not yet automatically regenerate a replacement question.
+
+### Batch-Level Similarity
+
+Currently, generated questions are primarily checked against questions already stored in the database.
+
+Questions generated in the same batch can be further compared against each other.
+
+
+The current system uses:
+
+
+Gemini Embeddings
+        +
+Neon PostgreSQL
+        +
+pgvector
+        +
+Semantic Similarity Search
+
+
+
+---
+
+# 🚀 Future Improvements
+
+- Automatically regenerate rejected questions
+- Guarantee exactly 10 unique questions
+- Compare questions within the same generated batch
+- Adaptive interview difficulty
+- Topic-based question selection
+- Interview performance analytics
+- Personalized candidate feedback
+- Question difficulty classification
+- Improved answer evaluation
+- Interview history analysis
+- RAG-based interview knowledge retrieval
+- Production vector indexes for larger datasets
+
+---
+
+# 🎯 Project Goal
+
+The goal of this project is to build a realistic AI-powered interview experience while learning how modern AI systems can be integrated with a full-stack application.
+
+
+
+# 👨‍💻 Author
 
 **Neeraj Suthar**
 
-Built as a practical project to explore the development of AI-powered interview systems and RAG-based applications.
+AI Interview Platform built as a hands-on project for learning and implementing modern AI and full-stack technologies.
