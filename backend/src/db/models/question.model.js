@@ -4,8 +4,8 @@ const createQuestion = async (
   interviewId,
   question,
   correct_answer,
-  questionOrder
-  
+  questionOrder,
+  embedding
 ) => {
 
   const result = await db.query(
@@ -15,20 +15,31 @@ const createQuestion = async (
       interview_id,
       question,
       correct_answer,
-      question_order
-
+      question_order,
+      embedding
     )
     VALUES
     (
-      $1,$2,$3,$4
+      $1,
+      $2,
+      $3,
+      $4,
+      $5::vector
     )
     RETURNING *
     `,
-    [interviewId, question, correct_answer,questionOrder]
+    [
+      interviewId,
+      question,
+      correct_answer,
+      questionOrder,
+      JSON.stringify(embedding)
+    ]
   );
 
   return result.rows[0];
 };
+
 
 const getQuestionsByInterviewId = async (interviewId) => {
 
@@ -59,6 +70,7 @@ const getQuestionById = async (questionId) => {
 
   return result.rows[0];
 };
+
 
 export default {
   createQuestion,

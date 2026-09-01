@@ -4,24 +4,31 @@ const createQuestion = async (
   interviewId,
   question,
   correctAnswer,
-  order
+  order,
+  embedding
 ) => {
 
   return await QuestionModel.createQuestion(
     interviewId,
     question,
     correctAnswer,
-    order
+    order,
+    embedding
   );
-
 };
 
 const getQuestionsByInterviewId = async (interviewId) => {
-  return await QuestionModel.getQuestionsByInterviewId(interviewId);
+
+  return await QuestionModel.getQuestionsByInterviewId(
+    interviewId
+  );
 };
 
 const getQuestionById = async (questionId) => {
-  return await QuestionModel.getQuestionById(questionId);
+
+  return await QuestionModel.getQuestionById(
+    questionId
+  );
 };
 
 export default {
