@@ -259,9 +259,7 @@ Do not simply rephrase the previous question.
   ) {
 
 
-    console.log(
-      `Generating question - attempt ${attempt}/${MAX_ATTEMPTS}`
-    );
+   
 
 
     // --------------------------------------------------
@@ -447,10 +445,7 @@ Do not include explanations outside JSON.
       );
 
 
-    console.log(
-      "Question similarity:",
-      similarity.similarity
-    );
+   
 
 
     // --------------------------------------------------
@@ -458,10 +453,6 @@ Do not include explanations outside JSON.
     // --------------------------------------------------
 
     if (!similarity.similar) {
-
-      console.log(
-        `Unique question generated on attempt ${attempt}`
-      );
 
 
       return {
@@ -497,12 +488,7 @@ Do not include explanations outside JSON.
 
     // --------------------------------------------------
     // 11. Question is too similar
-    // --------------------------------------------------
-
-    console.log(
-      `Question rejected on attempt ${attempt}. ` +
-      `Similarity: ${similarity.similarity}`
-    );
+    // -------------------------------------------------
 
 
     // If this was the last attempt,
