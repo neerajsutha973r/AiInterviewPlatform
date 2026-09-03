@@ -1,56 +1,108 @@
-import httpStatus from "http-status";
-import * as AnswerService from "../services/answer.service.js";
-import * as InterviewService from "../services/interview.service.js";
+import * as AnswerService
+  from "../services/answer.service.js";
 
-export const createAnswer = async (req, res) => {
-   
-  const { answer } = req.body;
-  const { questionId } = req.params;
+import * as InterviewService
+  from "../services/interview.service.js";
 
-  if (!answer) {
-    return res.status(httpStatus.BAD_REQUEST).json({
+import QuestionModel
+  from "../db/models/question.model.js";
+
+
+// ======================================================
+// CREATE ANSWER
+// ======================================================
+
+export const createAnswer = async (
+  req,
+  res
+) => {
+
+  const { answer } =
+    req.body;
+
+  const { questionId } =
+    req.params;
+
+
+  if (
+    !answer ||
+    typeof answer !== "string" ||
+    !answer.trim()
+  ) {
+
+    return res.status(400).json({
       message: "Answer is required",
     });
-  }
-
-  try {
-
-    const newAnswer = await AnswerService.createAnswer(
-      questionId,
-      answer,
-    );
-
-    return res.status(httpStatus.CREATED).json(newAnswer);
-
-  } catch (err) {
-
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
-      message: err.message,
-    });
 
   }
 
-};
-
-export const getAnswer = async (req, res) => {
 
   try {
 
-    const answer = await AnswerService.getAnswerByQuestionId(
-      req.params.questionId
-    );
+    const question =
+      await QuestionModel.getQuestionById(
+        questionId
+      );
 
-    if (!answer) {
-      return res.status(httpStatus.NOT_FOUND).json({
-        message: "Answer not found",
+
+    if (!question) {
+
+      return res.status(404).json({
+        message: "Question not found",
       });
+
     }
 
-    return res.status(httpStatus.OK).json(answer);
+
+    const interview =
+      await InterviewService.getInterviewById(
+        question.interview_id
+      );
+
+
+    if (!interview) {
+
+      return res.status(404).json({
+        message: "Interview not found",
+      });
+
+    }
+
+
+    // Ownership check
+    if (
+      String(interview.user_id) !==
+      String(req.user.id)
+    ) {
+
+      return res.status(403).json({
+        message: "Access denied",
+      });
+
+    }
+
+
+    const result =
+      await AnswerService.createAnswer(
+        questionId,
+        answer.trim()
+      );
+
+
+    return res.status(201).json(
+      result
+    );
+
 
   } catch (err) {
 
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+    console.error(
+      "Create answer error:",
+      err
+    );
+
+
+    return res.status(500).json({
       message: err.message,
     });
 
@@ -58,20 +110,163 @@ export const getAnswer = async (req, res) => {
 
 };
 
-export const getInterviewAnswers = async (req, res) => {
+
+// ======================================================
+// GET ANSWER
+// ======================================================
+
+export const getAnswer = async (
+  req,
+  res
+) => {
+
+  const { questionId } =
+    req.params;
+
 
   try {
+
+    const question =
+      await QuestionModel.getQuestionById(
+        questionId
+      );
+
+
+    if (!question) {
+
+      return res.status(404).json({
+        message: "Question not found",
+      });
+
+    }
+
+
+    const interview =
+      await InterviewService.getInterviewById(
+        question.interview_id
+      );
+
+
+    if (!interview) {
+
+      return res.status(404).json({
+        message: "Interview not found",
+      });
+
+    }
+
+
+    if (
+      String(interview.user_id) !==
+      String(req.user.id)
+    ) {
+
+      return res.status(403).json({
+        message: "Access denied",
+      });
+
+    }
+
+
+    const answer =
+      await AnswerService.getAnswerByQuestionId(
+        questionId
+      );
+
+
+    if (!answer) {
+
+      return res.status(404).json({
+        message: "Answer not found",
+      });
+
+    }
+
+
+    return res.status(200).json(
+      answer
+    );
+
+
+  } catch (err) {
+
+    console.error(
+      "Get answer error:",
+      err
+    );
+
+
+    return res.status(500).json({
+      message: err.message,
+    });
+
+  }
+
+};
+
+
+// ======================================================
+// GET ALL INTERVIEW ANSWERS
+// ======================================================
+
+export const getInterviewAnswers = async (
+  req,
+  res
+) => {
+
+  const { interviewId } =
+    req.params;
+
+
+  try {
+
+    const interview =
+      await InterviewService.getInterviewById(
+        interviewId
+      );
+
+
+    if (!interview) {
+
+      return res.status(404).json({
+        message: "Interview not found",
+      });
+
+    }
+
+
+    if (
+      String(interview.user_id) !==
+      String(req.user.id)
+    ) {
+
+      return res.status(403).json({
+        message: "Access denied",
+      });
+
+    }
+
 
     const answers =
       await AnswerService.getAnswersByInterview(
-        req.params.interviewId
+        interviewId
       );
 
-    return res.status(httpStatus.OK).json(answers);
+
+    return res.status(200).json(
+      answers
+    );
+
 
   } catch (err) {
 
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+    console.error(
+      "Get interview answers error:",
+      err
+    );
+
+
+    return res.status(500).json({
       message: err.message,
     });
 
@@ -79,30 +274,170 @@ export const getInterviewAnswers = async (req, res) => {
 
 };
 
-export const evaluateInterviewAnswers = async (req, res) => {
-  const { interviewId } = req.params;
-  
+
+// ======================================================
+// EVALUATE INTERVIEW ANSWERS
+// ======================================================
+
+export const evaluateInterviewAnswers = async (
+  req,
+  res
+) => {
+
+  const { interviewId } =
+    req.params;
+
 
   try {
-    
-    const evaluatedAnswers =
-      await AnswerService.evaluateInterviewAnswers(interviewId);
 
-        await InterviewService.updateStatus(
+    const interview =
+      await InterviewService.getInterviewById(
+        interviewId
+      );
+
+
+    if (!interview) {
+
+      return res.status(404).json({
+        message: "Interview not found",
+      });
+
+    }
+
+
+    if (
+      String(interview.user_id) !==
+      String(req.user.id)
+    ) {
+
+      return res.status(403).json({
+        message: "Access denied",
+      });
+
+    }
+
+
+    const evaluatedAnswers =
+      await AnswerService.evaluateInterviewAnswers(
+        interviewId
+      );
+
+
+    await InterviewService.updateStatus(
       interviewId,
       "Completed"
     );
 
-    return res.status(httpStatus.OK).json({
-      message: "Interview evaluated successfully",
-      data: evaluatedAnswers,
+
+    return res.status(200).json({
+
+      message:
+        "Interview evaluated successfully",
+
+      data:
+        evaluatedAnswers,
+
     });
+
 
   } catch (err) {
 
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+    console.error(
+      "Evaluate interview error:",
+      err
+    );
+
+
+    return res.status(500).json({
       message: err.message,
     });
 
   }
+
+};
+
+
+// ======================================================
+// GENERATE NEXT QUESTION
+// ======================================================
+
+export const generateNextQuestion = async (
+  req,
+  res
+) => {
+
+  const { questionId } =
+    req.params;
+
+
+  try {
+
+    const question =
+      await QuestionModel.getQuestionById(
+        questionId
+      );
+
+
+    if (!question) {
+
+      return res.status(404).json({
+        message: "Question not found",
+      });
+
+    }
+
+
+    const interview =
+      await InterviewService.getInterviewById(
+        question.interview_id
+      );
+
+
+    if (!interview) {
+
+      return res.status(404).json({
+        message: "Interview not found",
+      });
+
+    }
+
+
+    // Ownership check
+    if (
+      String(interview.user_id) !==
+      String(req.user.id)
+    ) {
+
+      return res.status(403).json({
+        message: "Access denied",
+      });
+
+    }
+
+
+    const result =
+      await AnswerService.generateNextQuestion(
+        questionId
+      );
+
+
+    return res.status(200).json(
+      result
+    );
+
+
+  } catch (err) {
+
+    console.error(
+      "Generate next question error:",
+      err
+    );
+
+
+    return res.status(500).json({
+      message: err.message,
+    });
+
+  }
+
 };

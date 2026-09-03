@@ -1,38 +1,102 @@
-import QuestionModel from "../db/models/question.model.js";
+import QuestionModel
+  from "../db/models/question.model.js";
+
+
+// ======================================================
+// CREATE QUESTION
+// ======================================================
 
 const createQuestion = async (
   interviewId,
   question,
   correctAnswer,
   order,
-  embedding
+  embedding,
+  skill,
+  topic,
+  questionType,
+  difficulty
 ) => {
 
-  return await QuestionModel.createQuestion(
-    interviewId,
-    question,
-    correctAnswer,
-    order,
-    embedding
+  // Create question
+  const createdQuestion =
+    await QuestionModel.createQuestion(
+
+      interviewId,
+
+      question,
+
+      correctAnswer,
+
+      order,
+
+      embedding
+
+    );
+
+
+  // Create adaptive metadata
+  await QuestionModel.createQuestionMetadata(
+
+    createdQuestion.id,
+
+    skill,
+
+    topic,
+
+    questionType,
+
+    difficulty
+
   );
+
+
+  return createdQuestion;
 };
 
-const getQuestionsByInterviewId = async (interviewId) => {
 
-  return await QuestionModel.getQuestionsByInterviewId(
-    interviewId
-  );
+// ======================================================
+// GET QUESTIONS BY INTERVIEW
+// ======================================================
+
+const getQuestionsByInterviewId = async (
+  interviewId
+) => {
+
+  return await QuestionModel
+    .getQuestionsByInterviewId(
+      interviewId
+    );
+
 };
 
-const getQuestionById = async (questionId) => {
 
-  return await QuestionModel.getQuestionById(
-    questionId
-  );
+// ======================================================
+// GET QUESTION BY ID
+// ======================================================
+
+const getQuestionById = async (
+  questionId
+) => {
+
+  return await QuestionModel
+    .getQuestionById(
+      questionId
+    );
+
 };
+
+
+// ======================================================
+// EXPORT
+// ======================================================
 
 export default {
+
   createQuestion,
+
   getQuestionsByInterviewId,
+
   getQuestionById,
+
 };

@@ -1,19 +1,61 @@
 import express from "express";
-import * as InterviewController from "../controllers/interview.controller.js";
-import verifyuser from "../middleware/auth.middleware.js";
+
+import * as InterviewController
+  from "../controllers/interview.controller.js";
+
+import verifyuser
+  from "../middleware/auth.middleware.js";
+
 
 const router = express.Router();
 
-router.post("/",verifyuser,InterviewController.createInterview);
 
-router.get("/", verifyuser, InterviewController.getAllInterviews);
+// Create interview
+router.post(
+  "/",
+  verifyuser,
+  InterviewController.createInterview
+);
 
-router.get("/:id", verifyuser, InterviewController.getInterviewById);
 
-router.delete("/:id", verifyuser, InterviewController.deleteInterview);
+// Get all interviews for current user
+router.get(
+  "/",
+  verifyuser,
+  InterviewController.getAllInterviews
+);
 
-router.post("/:id/start",verifyuser,InterviewController.startInterview);
 
-router.get("/:id/questions",verifyuser,InterviewController.getQuestions);
+// Get single interview
+router.get(
+  "/:id",
+  verifyuser,
+  InterviewController.getInterviewById
+);
+
+
+// Delete interview
+router.delete(
+  "/:id",
+  verifyuser,
+  InterviewController.deleteInterview
+);
+
+
+// Start interview
+router.post(
+  "/:id/start",
+  verifyuser,
+  InterviewController.startInterview
+);
+
+
+// Get questions for interview
+router.get(
+  "/:id/questions",
+  verifyuser,
+  InterviewController.getQuestions
+);
+
 
 export default router;

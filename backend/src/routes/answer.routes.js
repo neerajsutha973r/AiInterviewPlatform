@@ -1,8 +1,18 @@
 import express from "express";
-import verifyUser from "../middleware/auth.middleware.js";
-import * as AnswerController from "../controllers/answer.controller.js";
+
+import verifyUser
+  from "../middleware/auth.middleware.js";
+
+import * as AnswerController
+  from "../controllers/answer.controller.js";
+
 
 const router = express.Router();
+
+
+// ======================================================
+// SUBMIT ANSWER
+// ======================================================
 
 router.post(
   "/questions/:questionId/answer",
@@ -10,11 +20,32 @@ router.post(
   AnswerController.createAnswer
 );
 
+
+// ======================================================
+// GENERATE NEXT ADAPTIVE QUESTION
+// ======================================================
+
+router.post(
+  "/questions/:questionId/next",
+  verifyUser,
+  AnswerController.generateNextQuestion
+);
+
+
+// ======================================================
+// GET ANSWER FOR A QUESTION
+// ======================================================
+
 router.get(
   "/questions/:questionId/answer",
   verifyUser,
   AnswerController.getAnswer
 );
+
+
+// ======================================================
+// GET ALL ANSWERS FOR AN INTERVIEW
+// ======================================================
 
 router.get(
   "/interviews/:interviewId/answers",
@@ -22,9 +53,16 @@ router.get(
   AnswerController.getInterviewAnswers
 );
 
+
+// ======================================================
+// EVALUATE INTERVIEW ANSWERS
+// ======================================================
+
 router.post(
   "/interview/:interviewId/evaluate",
+  verifyUser,
   AnswerController.evaluateInterviewAnswers
 );
+
 
 export default router;

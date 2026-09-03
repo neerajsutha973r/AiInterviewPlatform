@@ -1,126 +1,532 @@
-import { useState, useRef, useEffect } from "react";
+import {
+    useState,
+    useRef,
+    useEffect
+} from "react";
+
 
 function useSpeechRecognition() {
 
-    const [transcript, setTranscript] = useState("");
-    const [isListening, setIsListening] = useState(false);
+    const [
+        transcript,
+        setTranscript
+    ] = useState("");
 
-    const recognitionRef = useRef(null);
-    const silenceTimer = useRef(null);
-    const callbackRef = useRef(null);
-    const latestTranscript = useRef("");
+
+    const [
+        isListening,
+        setIsListening
+    ] = useState(false);
+
+
+    // ==================================================
+    // REFS
+    // ==================================================
+
+    const recognitionRef =
+        useRef(null);
+
+
+    const silenceTimer =
+        useRef(null);
+
+
+    const callbackRef =
+        useRef(null);
+
+
+    // Stores the complete answer
+    const finalTranscriptRef =
+        useRef("");
+
+
+    // Prevent callback from firing more than once
+    const callbackCalledRef =
+        useRef(false);
+
+
+    const manuallyStoppedRef =
+        useRef(false);
+
+
+    // ==================================================
+    // BROWSER SPEECH RECOGNITION
+    // ==================================================
 
     const SpeechRecognition =
         window.SpeechRecognition ||
         window.webkitSpeechRecognition;
 
+
+    // ==================================================
+    // INITIALIZE
+    // ==================================================
+
     useEffect(() => {
 
-        if (!SpeechRecognition) return;
+        if (!SpeechRecognition) {
 
-        const recognition = new SpeechRecognition();
+            console.error(
+                "Speech Recognition is not supported by this browser."
+            );
 
-        recognition.lang = "en-US";
+            return;
 
-        recognition.continuous = true;
+        }
 
-        recognition.interimResults = true;
+
+        const recognition =
+            new SpeechRecognition();
+
+
+        recognition.lang =
+            "en-US";
+
+
+        /*
+         * Keep listening during the candidate's answer.
+         */
+        recognition.continuous =
+            true;
+
+
+        /*
+         * We need interim results so the UI updates
+         * while the candidate is speaking.
+         */
+        recognition.interimResults =
+            true;
+
+
+        // ==================================================
+        // ON START
+        // ==================================================
 
         recognition.onstart = () => {
 
+            console.log(
+                "🎤 Speech recognition started"
+            );
+
+
             setIsListening(true);
 
-            silenceTimer.current = setTimeout(() => {
-                recognition.stop();
-            }, 5000);
+
+            manuallyStoppedRef.current =
+                false;
+
+
+            callbackCalledRef.current =
+                false;
+
+
+            // If candidate hasn't spoken anything
+            // for 5 seconds, stop.
+            clearTimeout(
+                silenceTimer.current
+            );
+
+
+            silenceTimer.current =
+                setTimeout(() => {
+
+                    console.log(
+                        "⏳ Initial silence timeout"
+                    );
+
+
+                    recognition.stop();
+
+                }, 5000);
 
         };
 
-        recognition.onresult = (event) => {
 
-            let text = "";
+        // ==================================================
+        // ON RESULT
+        // ==================================================
+
+        recognition.onresult = (
+            event
+        ) => {
+
+            /*
+             * IMPORTANT:
+             *
+             * We accumulate results instead of replacing
+             * the previous transcript.
+             */
+
+            let sessionText = "";
+
 
             for (
-                let i = event.resultIndex;
+                let i = 0;
                 i < event.results.length;
                 i++
             ) {
 
-                text += event.results[i][0].transcript;
+                const result =
+                    event.results[i];
+
+
+                if (
+                    result &&
+                    result[0]
+                ) {
+
+                    sessionText +=
+                        result[0].transcript;
+
+                }
 
             }
 
-            latestTranscript.current = text;
 
-            setTranscript(text);
+            sessionText =
+                sessionText.trim();
 
-            clearTimeout(silenceTimer.current);
 
-            silenceTimer.current = setTimeout(() => {
+            // ----------------------------------------------
+            // Store complete answer
+            // ----------------------------------------------
 
-                recognition.stop();
+            finalTranscriptRef.current =
+                sessionText;
 
-            }, 3000);
+
+            // ----------------------------------------------
+            // Update UI
+            // ----------------------------------------------
+
+            setTranscript(
+                sessionText
+            );
+
+
+            console.log(
+                "📝 Current transcript:",
+                sessionText
+            );
+
+
+            // ----------------------------------------------
+            // Reset silence timer
+            // ----------------------------------------------
+
+            clearTimeout(
+                silenceTimer.current
+            );
+
+
+            silenceTimer.current =
+                setTimeout(() => {
+
+                    console.log(
+                        "⏳ Candidate stopped speaking"
+                    );
+
+
+                    recognition.stop();
+
+                }, 3000);
 
         };
 
+
+        // ==================================================
+        // ON END
+        // ==================================================
+
         recognition.onend = () => {
+
+            console.log(
+                "🛑 Speech recognition ended"
+            );
+
 
             setIsListening(false);
 
-            if (callbackRef.current) {
+
+            clearTimeout(
+                silenceTimer.current
+            );
+
+
+            /*
+             * Don't call the callback more than once.
+             */
+            if (
+                callbackCalledRef.current
+            ) {
+
+                return;
+
+            }
+
+
+            callbackCalledRef.current =
+                true;
+
+
+            /*
+             * IMPORTANT:
+             *
+             * Give the final transcript to the component.
+             */
+
+            if (
+                callbackRef.current
+            ) {
+
+                const finalAnswer =
+                    finalTranscriptRef.current
+                        .trim();
+
+
+                console.log(
+                    "✅ Final candidate answer:",
+                    finalAnswer
+                );
+
 
                 callbackRef.current(
-                    latestTranscript.current
+                    finalAnswer
                 );
 
             }
 
         };
 
-        recognition.onerror = (event) => {
 
-            console.log(event.error);
+        // ==================================================
+        // ON ERROR
+        // ==================================================
+
+        recognition.onerror = (
+            event
+        ) => {
+
+            console.error(
+                "Speech recognition error:",
+                event.error
+            );
+
 
             setIsListening(false);
 
+
+            clearTimeout(
+                silenceTimer.current
+            );
+
+
+            /*
+             * Don't submit on common browser errors
+             * such as aborted/no-speech.
+             */
+
+            if (
+                event.error ===
+                    "aborted" ||
+                event.error ===
+                    "no-speech"
+            ) {
+
+                return;
+
+            }
+
         };
 
-        recognitionRef.current = recognition;
+
+        // ==================================================
+        // SAVE INSTANCE
+        // ==================================================
+
+        recognitionRef.current =
+            recognition;
+
+
+        // ==================================================
+        // CLEANUP
+        // ==================================================
 
         return () => {
 
-            recognition.stop();
+            clearTimeout(
+                silenceTimer.current
+            );
 
-            clearTimeout(silenceTimer.current);
+
+            if (
+                recognitionRef.current
+            ) {
+
+                try {
+
+                    recognitionRef.current.stop();
+
+                } catch (error) {
+
+                    console.log(
+                        "Recognition cleanup:",
+                        error
+                    );
+
+                }
+
+            }
 
         };
 
     }, []);
 
-    const startListening = (onFinished = null) => {
 
-        if (!recognitionRef.current) return;
+    // ==================================================
+    // START LISTENING
+    // ==================================================
 
-        callbackRef.current = onFinished;
+    const startListening = (
+        onFinished = null
+    ) => {
 
-        latestTranscript.current = "";
+        if (
+            !recognitionRef.current
+        ) {
 
-        setTranscript("");
+            console.error(
+                "Speech recognition is unavailable."
+            );
 
-        recognitionRef.current.start();
+            return;
+
+        }
+
+
+        /*
+         * Save callback for this answer.
+         */
+
+        callbackRef.current =
+            onFinished;
+
+
+        /*
+         * Reset everything ONLY when a completely
+         * new answer starts.
+         */
+
+        finalTranscriptRef.current =
+            "";
+
+        callbackCalledRef.current =
+            false;
+
+        manuallyStoppedRef.current =
+            false;
+
+
+        setTranscript(
+            ""
+        );
+
+
+        clearTimeout(
+            silenceTimer.current
+        );
+
+
+        try {
+
+            recognitionRef.current.start();
+
+            console.log(
+                "🎤 Starting new answer recording"
+            );
+
+        } catch (error) {
+
+            /*
+             * Browser can throw if start() is called
+             * while recognition is already running.
+             */
+
+            console.log(
+                "Speech recognition start:",
+                error
+            );
+
+        }
 
     };
+
+
+    // ==================================================
+    // STOP LISTENING
+    // ==================================================
 
     const stopListening = () => {
 
-        if (!recognitionRef.current) return;
+        if (
+            !recognitionRef.current
+        ) {
 
-        clearTimeout(silenceTimer.current);
+            return;
 
-        recognitionRef.current.stop();
+        }
+
+
+        clearTimeout(
+            silenceTimer.current
+        );
+
+
+        /*
+         * IMPORTANT:
+         *
+         * Clear callback before manually stopping.
+         *
+         * This prevents stopListening() from accidentally
+         * submitting an answer a second time.
+         */
+
+        callbackRef.current =
+            null;
+
+
+        callbackCalledRef.current =
+            true;
+
+
+        manuallyStoppedRef.current =
+            true;
+
+
+        try {
+
+            recognitionRef.current.stop();
+
+        } catch (error) {
+
+            console.log(
+                "Speech recognition stop:",
+                error
+            );
+
+        }
+
+
+        setIsListening(
+            false
+        );
 
     };
+
+
+    // ==================================================
+    // RETURN
+    // ==================================================
 
     return {
 
@@ -137,5 +543,6 @@ function useSpeechRecognition() {
     };
 
 }
+
 
 export default useSpeechRecognition;

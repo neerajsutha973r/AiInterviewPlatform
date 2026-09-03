@@ -1,117 +1,251 @@
 import { GoogleGenAI } from "@google/genai";
 import db from "../db/connection.js";
 
+
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
-export const findSimilarQuestions = async (
-  newQuestion,
-  role,
-  difficulty,
-  limit = 10
+
+// ======================================================
+// GENERATE QUESTION EMBEDDING
+// ======================================================
+
+const generateEmbedding = async (
+  question
 ) => {
 
-  const response = await ai.models.embedContent({
-    model: "gemini-embedding-001",
-    contents: newQuestion,
-    config: {
-      outputDimensionality: 768,
-    },
-  });
+  const response =
+    await ai.models.embedContent({
 
-  const embedding = response.embeddings[0].values;
+      model:
+        "gemini-embedding-001",
 
-  const result = await db.query(
-    `
-    SELECT
-      q.id,
-      q.question,
-      i.role,
-      i.difficulty,
-      1 - (q.embedding <=> $1::vector) AS similarity
-    FROM questions q
-    JOIN interviews i
-      ON q.interview_id = i.id
-    WHERE q.embedding IS NOT NULL
-      AND i.role = $2
-      AND i.difficulty = $3
-    ORDER BY q.embedding <=> $1::vector
-    LIMIT $4;
-    `,
-    [
-      JSON.stringify(embedding),
-      role,
-      difficulty,
-      limit,
-    ]
-  );
+      contents:
+        question,
 
-  return result.rows;
-};
+      config: {
+        outputDimensionality: 768,
+      },
+
+    });
 
 
-export const isSimilarToExistingQuestion = async (
-  question,
-  role,
-  difficulty,
-  threshold = 0.85
-) => {
+  if (
+    !response.embeddings ||
+    !response.embeddings[0] ||
+    !response.embeddings[0].values
+  ) {
 
-  const response = await ai.models.embedContent({
-    model: "gemini-embedding-001",
-    contents: question,
-    config: {
-      outputDimensionality: 768,
-    },
-  });
+    throw new Error(
+      "Failed to generate question embedding"
+    );
 
-  // This is the embedding we will save later
-  const embedding = response.embeddings[0].values;
-
-
-  const result = await db.query(
-    `
-    SELECT
-      q.id,
-      q.question,
-      1 - (q.embedding <=> $1::vector) AS similarity
-    FROM questions q
-    JOIN interviews i
-      ON q.interview_id = i.id
-    WHERE q.embedding IS NOT NULL
-      AND i.role = $2
-      AND i.difficulty = $3
-    ORDER BY q.embedding <=> $1::vector
-    LIMIT 1;
-    `,
-    [
-      JSON.stringify(embedding),
-      role,
-      difficulty,
-    ]
-  );
-
-
-  if (result.rows.length === 0) {
-    return {
-      similar: false,
-      similarity: 0,
-      matchedQuestion: null,
-      embedding,
-    };
   }
 
 
-  const similarity = Number(
-    result.rows[0].similarity
-  );
+  const embedding =
+    response.embeddings[0].values;
 
 
-  return {
-    similar: similarity >= threshold,
-    similarity,
-    matchedQuestion: result.rows[0].question,
-    embedding,
-  };
+  if (
+    embedding.length !== 768
+  ) {
+
+    throw new Error(
+      `Invalid embedding dimension: ${embedding.length}. Expected 768.`
+    );
+
+  }
+
+
+  return embedding;
+
 };
+
+
+// ======================================================
+// FIND SIMILAR QUESTIONS
+// ======================================================
+//
+// Finds previous questions for:
+//   - Same user
+//   - Same role
+//
+// Difficulty is intentionally NOT filtered.
+//
+// ======================================================
+
+export const findSimilarQuestions = async (
+  newQuestion,
+  userId,
+  role,
+  limit = 10
+) => {
+
+
+  const embedding =
+    await generateEmbedding(
+      newQuestion
+    );
+
+
+  const result =
+    await db.query(
+      `
+      SELECT
+        q.id,
+        q.question,
+        i.role,
+
+        1 - (
+          q.embedding <=> $1::vector
+        ) AS similarity
+
+      FROM questions q
+
+      JOIN interviews i
+        ON q.interview_id = i.id
+
+      WHERE q.embedding IS NOT NULL
+
+        AND i.user_id = $2
+
+        AND i.role = $3
+
+      ORDER BY
+        q.embedding <=> $1::vector
+
+      LIMIT $4;
+      `,
+      [
+        JSON.stringify(embedding),
+
+        userId,
+
+        role,
+
+        limit,
+      ]
+    );
+
+
+  return result.rows;
+
+};
+
+
+// ======================================================
+// CHECK QUESTION SIMILARITY
+// ======================================================
+//
+// Returns the closest previous question.
+//
+// If similarity >= threshold,
+// the generated question is rejected.
+//
+// ======================================================
+
+export const isSimilarToExistingQuestion =
+  async (
+    question,
+    userId,
+    role,
+    threshold = 0.85
+  ) => {
+
+
+    const embedding =
+      await generateEmbedding(
+        question
+      );
+
+
+    const result =
+      await db.query(
+        `
+        SELECT
+          q.id,
+          q.question,
+
+          1 - (
+            q.embedding <=> $1::vector
+          ) AS similarity
+
+        FROM questions q
+
+        JOIN interviews i
+          ON q.interview_id = i.id
+
+        WHERE q.embedding IS NOT NULL
+
+          AND i.user_id = $2
+
+          AND i.role = $3
+
+        ORDER BY
+          q.embedding <=> $1::vector
+
+        LIMIT 1;
+        `,
+        [
+          JSON.stringify(embedding),
+
+          userId,
+
+          role,
+        ]
+      );
+
+
+    // --------------------------------------------------
+    // No previous questions
+    // --------------------------------------------------
+
+    if (
+      result.rows.length === 0
+    ) {
+
+      return {
+
+        similar:
+          false,
+
+        similarity:
+          0,
+
+        matchedQuestion:
+          null,
+
+        embedding,
+
+      };
+
+    }
+
+
+    // --------------------------------------------------
+    // Get closest similarity
+    // --------------------------------------------------
+
+    const similarity =
+      Number(
+        result.rows[0].similarity
+      );
+
+
+    return {
+
+      similar:
+        similarity >= threshold,
+
+      similarity,
+
+      matchedQuestion:
+        result.rows[0].question,
+
+      embedding,
+
+    };
+
+  };
