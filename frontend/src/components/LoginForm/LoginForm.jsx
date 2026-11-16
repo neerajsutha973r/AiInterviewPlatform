@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import authService from "../../services/authServcie.js";
+import { AUTH_STORAGE_ERROR, saveSessionToken } from "../../services/authStorage";
 import useAuth from "../../hooks/useAuth.jsx";
 import "./LoginForm.css";
 
@@ -38,16 +39,16 @@ function LoginForm() {
       setLoading(true);
 
       const data = await authService.login(formData);
-      localStorage.setItem("token",data.token);
-      console.log(data.user);
+      saveSessionToken(data.token);
       // Save user in AuthContext
       login(data.user);
 
       // Redirect to home
       navigate("/dashboard");
     } catch (err) {
-        console.log(err);
-      setError(err.response?.data?.message || "Login failed.");
+      setError(err.code === "AUTH_STORAGE_UNAVAILABLE"
+        ? AUTH_STORAGE_ERROR
+        : err.response?.data?.message || "Login failed.");
     } finally {
       setLoading(false);
     }

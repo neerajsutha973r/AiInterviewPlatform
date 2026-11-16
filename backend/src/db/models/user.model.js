@@ -18,17 +18,26 @@ const createUser = async (name, username, password) => {
 
 const updateToken = async (id, token) => {
   return await db.query(
-    "UPDATE users SET token = $1 WHERE id = $2",
+    "UPDATE users SET token = $1, token_expires_at = statement_timestamp() + INTERVAL '24 hours' WHERE id = $2",
     [token, id]
   );
 };
 const findByToken = async (token) => {
   const result = await db.query(
-    `SELECT * FROM users WHERE token = $1`,
+    `SELECT * FROM users WHERE token = $1 AND token_expires_at > statement_timestamp()`,
     [token]
   );
 
   return result.rows[0];
+};
+
+const revokeToken = async (id, token) => {
+  // Match the presented token as well as the user: a newer login must survive.
+  const result = await db.query(
+    "UPDATE users SET token = NULL, token_expires_at = NULL WHERE id = $1 AND token = $2 RETURNING id",
+    [id, token]
+  );
+  return result.rows.length > 0;
 };
 
 export default {
@@ -36,4 +45,5 @@ export default {
   findByUsername,
   updateToken,
   findByToken,
+  revokeToken,
 };

@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 import Home from "../src/pages/Home.jsx";
 import Login from "../src/pages/Login.jsx";
@@ -17,10 +18,12 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login/>}/>
         <Route path="/signup" element={<Signup />}/>
-        <Route path="/dashboard" element={<Dashboard/>} />
-        <Route path="/interview/:id" element={<Interview />} />
-        <Route path="/interview/:id/questions" element={<InterviewQuestions/>}/>
-        <Route path="/interview/:id/result" element={<InterviewResult/>}/>
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<Dashboard/>} />
+          <Route path="/interview/:id" element={<Interview />} />
+          <Route path="/interview/:id/questions" element={<InterviewQuestions/>}/>
+          <Route path="/interview/:id/result" element={<InterviewResult/>}/>
+        </Route>
         <Route path="/voice" element={<TestVoice/>}/>
         <Route path="/About" element={<Aboutai/>}/>
         <Route path="/contact" element={<Contactai/>}/>

@@ -32,7 +32,7 @@ const register = async (req, res) => {
     }
 
     return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
-      message:`err in register ${err.message}` ,
+      message: "Unable to register. Please try again.",
     });
 
   }
@@ -74,7 +74,7 @@ const login = async (req, res) => {
     }
 
     return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
-      message: err.message,
+      message: "Unable to log in. Please try again.",
     });
 
   }
@@ -90,10 +90,27 @@ const getCurrentUser = async (req, res) => {
 
   } catch (err) {
 
-    return res.status(httpStatus.UNAUTHORIZED).json({
-      message: err.message,
+    if (err.code === "INVALID_SESSION") {
+      return res.status(httpStatus.UNAUTHORIZED).json({ message: "User not found" });
+    }
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+      message: "Unable to verify session. Please try again.",
     });
 
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+    const revoked = await userService.logout(req.user.id, req.headers.authorization);
+    if (!revoked) {
+      return res.status(httpStatus.UNAUTHORIZED).json({ message: "Invalid token" });
+    }
+    return res.status(httpStatus.OK).json({ message: "Logged out successfully" });
+  } catch {
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+      message: "Logout failed. Server revocation could not be confirmed.",
+    });
   }
 };
 
@@ -101,4 +118,5 @@ export {
   register,
   login,
   getCurrentUser,
+  logout,
 };

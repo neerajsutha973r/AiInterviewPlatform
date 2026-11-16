@@ -10,7 +10,14 @@ const verifyUser = async (req, res, next) => {
     });
   }
 
-  const user = await userModel.findByToken(token);
+  let user;
+  try {
+    user = await userModel.findByToken(token);
+  } catch {
+    return res.status(500).json({
+      message: "Unable to verify session. Please try again.",
+    });
+  }
 
   if (!user) {
     return res.status(401).json({

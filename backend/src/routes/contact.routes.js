@@ -3,6 +3,11 @@ import * as ContactController from "../controllers/contact.controller.js";
 
 const router = express.Router();
 
+// Management stays disabled until explicit admin authorization is designed.
+const denyContactManagement = (req, res) => {
+    return res.status(403).json({ message: "Contact management is disabled" });
+};
+
 // Create Contact Message
 router.post(
     "/",
@@ -12,19 +17,19 @@ router.post(
 // Get All Contact Messages
 router.get(
     "/",
-    ContactController.getAllContacts
+    denyContactManagement
 );
 
 // Get Contact By ID
 router.get(
     "/:id",
-    ContactController.getContactById
+    denyContactManagement
 );
 
 // Delete Contact Message
 router.delete(
     "/:id",
-    ContactController.deleteContact
+    denyContactManagement
 );
 
 export default router;

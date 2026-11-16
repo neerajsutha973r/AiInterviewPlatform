@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Navigate } from "react-router-dom";
 
 function Navbar() {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, logoutError, isLoggingOut } = useAuth();
   const location = useLocation();
   const navigate=useNavigate();
 
@@ -21,9 +21,12 @@ function Navbar() {
 
       <div className="buttons">
         {isAuthenticated ? (
-          <button className="logout" onClick={logout}>
-            Logout
-          </button>
+          <div>
+            <button className="logout" onClick={logout} disabled={isLoggingOut}>
+              {isLoggingOut ? "Logging out..." : "Logout"}
+            </button>
+            {logoutError && <p role="alert">{logoutError}</p>}
+          </div>
         ) : (
           <>
             {location.pathname !== "/login" && (

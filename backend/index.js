@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import answerRoutes from "./src/routes/answer.routes.js"
 import contactRoutes from "./src/routes/contact.routes.js"
+import startServer from "./src/startup.js";
 
 
 const app=express();
@@ -26,7 +27,10 @@ app.use("/answer", answerRoutes);
 app.use("/contact",contactRoutes);
 
 const PORT = process.env.PORT || 8000;
-app.listen(PORT,()=>{
-    console.log(`server is listening on ${PORT}`);
-
+startServer(app, PORT).catch((error) => {
+    const message = error.code === "SCHEMA_NOT_READY"
+      ? "Required schema is missing or incompatible: users.token_expires_at must be TIMESTAMPTZ. Apply migration 001 before starting."
+      : "Database readiness or server startup failed. Verify PostgreSQL availability and migration 001.";
+    console.error("Backend startup aborted:", message);
+    process.exit(1);
 });
